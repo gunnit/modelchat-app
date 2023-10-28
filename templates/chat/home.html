@@ -1,11 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
+    
     <title>ModelChat Home</title>
 </head>
 <body>
-    <h1>Welcome to ModelChat!</h1>
+    
+    <h1>Welcome to ModelChaAt!</h1>
     <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'account_signup' %}">Sign Up</a>
+    <a href="{% url 'account_login' %}">Login</a>
+
+    <div id="chat-box" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px;"></div>
+    <textarea id="message-input" rows="3" placeholder="Type your message..."></textarea>
+    <button id="send-button">Send</button>
+
     <p>This is the homepage.</p>
+    <input type="hidden" id="csrf-token" value="{% csrf_token %}">
+    <script>
+        document.getElementById('send-button').addEventListener('click', function() {
+            // Get the CSRF token from the hidden input field
+            var csrfToken = document.getElementById('csrf-token').value;
+            var messageInput = document.getElementById('message-input');
+            var userMessage = messageInput.value;
+    
+            // Send the user message to your Django server for processing with GPT
+            console.log("Sending data:", { message: userMessage });  // Debug print
+            fetch('/api/process_message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken, // Include the CSRF token in the headers
+                },
+                body: JSON.stringify({ message: userMessage }),
+            })
+            
+                .then(response => response.json())
+                .then(data => {
+                    // Append the received message to the chat box
+                    var chatBox = document.getElementById('chat-box');
+                    chatBox.innerHTML += '<p>User: ' + userMessage + '</p>';
+                    chatBox.innerHTML += '<p>GPT-3: ' + data.message + '</p>';
+    
+                    // Clear the message input field
+                    messageInput.value = '';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
 </body>
 </html>

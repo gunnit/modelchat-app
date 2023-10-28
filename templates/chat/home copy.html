@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>ModelChat Home</title>
+</head>
+<body>
+    
+    <h1>Welcome to ModelChaAt!</h1>
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'account_signup' %}">Sign Up</a>
+    <a href="{% url 'account_login' %}">Login</a>
+
+    <div id="chat-box" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px;"></div>
+    <textarea id="message-input" rows="3" placeholder="Type your message..."></textarea>
+    <button id="send-button">Send</button>
+
+    <p>This is the homepage.</p>
+    <input type="hidden" id="csrf-token" value="{% csrf_token %}">
+    <script>
+        var socket = new WebSocket('ws://127.0.0.1:8000/ws/chat/');
+
+        socket.onopen = function(event) {
+            console.log("WebSocket is open now.");
+        };
+
+        socket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+            var message = data['message'];
+            var chatBox = document.getElementById('chat-box');
+            
+            // Add the received message to the chat box
+            chatBox.innerHTML += '<div style="background-color: #eef; padding: 5px; margin: 5px;">' + message + '</div>';
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        document.getElementById('send-button').addEventListener('click', function() {
+            // Get the CSRF token from the hidden input field
+            var csrfToken = document.getElementById('csrf-token').value;
+            var messageInput = document.getElementById('message-input');
+            var userMessage = messageInput.value;
+
+            // Send the user message via WebSocket
+            socket.send(JSON.stringify({
+                'message': userMessage
+            }));
+
+            // Clear the input
+            messageInput.value = '';
+
+            // Display the user message in the chat box
+            var chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += '<div style="background-color: #ccf; padding: 5px; margin: 5px;">' + userMessage + '</div>';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send the user message to your Django server for processing with GPT
+            fetch('/api/process_message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken, // Include the CSRF token in the headers
+                },
+                body: JSON.stringify({ message: userMessage }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Get the GPT response and display it in the chat box
+                var gptResponse = data.message;
+                chatBox.innerHTML += '<div style="background-color: #eef; padding: 5px; margin: 5px;">' + gptResponse + '</div>';
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Send the GPT response via WebSocket
+                socket.send(JSON.stringify({
+                    'message': gptResponse
+                }));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
