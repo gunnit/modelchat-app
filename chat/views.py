@@ -21,7 +21,7 @@ _ = load_dotenv(find_dotenv()) # read local .env file
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 bot = Bot(token=os.environ['TELEGRAM_BOT_TOKEN'])
-WEBHOOK_URL = 'https://0c5f-146-241-36-184.ngrok-free.app/telegram_webhook/'
+WEBHOOK_URL = 'https://modelchat-app-047e22be030b.herokuapp.com/telegram_webhook/'
 # This function will be synchronous
 def set_telegram_webhook():
     async_to_sync(bot.set_webhook)(url=WEBHOOK_URL)
