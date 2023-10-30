@@ -1,10 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    
-    <title>ModelChat Home</title>
-</head>
-<body>
+<!-- templates/home.html -->
+{% extends "base.html" %}
+
+{% block title %}
+Home Page
+{% endblock %}
+
+{% block content %}
+<h1>ModelChat Home</h1>
+<p>This is the home page content.</p>
+
+
     
     <h1>Welcome to ModelChaAt!</h1>
     <a href="{% url 'home' %}">Home</a>
@@ -17,6 +22,11 @@
 
     <p>This is the homepage.</p>
     <input type="hidden" id="csrf-token" value="{% csrf_token %}">
+    {% endblock %}
+
+
+    {% block scripts %}
+
     <script>
         document.getElementById('send-button').addEventListener('click', function() {
             // Get the CSRF token from the hidden input field
@@ -50,5 +60,5 @@
                 });
         });
     </script>
-</body>
-</html>
+
+{% endblock %}
