@@ -16,13 +16,19 @@ from time import sleep
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import async_to_sync
+from telegram.request._baserequest import BaseRequest
+
 
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv()) # read local .env file
 # Set the API key
 openai.api_key = os.environ['OPENAI_API_KEY']
 
+
+
 bot = Bot(token=os.environ['TELEGRAM_BOT_TOKEN'])
+# Adjust the connection pool size
+BaseRequest.CON_POOL_SIZE = 10  # Set the desired pool size
 WEBHOOK_URL = 'https://modelchat-app-047e22be030b.herokuapp.com/telegram_webhook/'
 # This function will be synchronous
 def set_telegram_webhook():
