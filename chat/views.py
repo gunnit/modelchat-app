@@ -11,6 +11,7 @@ from langchain.memory import ConversationBufferMemory
 
 from telegram import Bot, Update
 from telegram.ext import Updater
+from time import sleep
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import async_to_sync
@@ -74,6 +75,8 @@ def process_message(request):
     return JsonResponse({'message': 'Invalid request'})
 
 
+
+
 @csrf_exempt
 def telegram_webhook(request):
     if request.method == "POST":
@@ -84,19 +87,31 @@ def telegram_webhook(request):
         # Prepend the system message to set the context
         full_message = system_message + " " + message_text
         print("Received message from Telegram:", message_text)
-        try:
-            # Use the conversation chain to process the user's message
-            response = conversation.predict(input=full_message)
-            
-            # Extract the assistant's response from the conversation
-            gpt_response = response
-            async_to_sync(bot.send_message)(chat_id=update.message.chat_id, text=gpt_response)
+        
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Use the conversation chain to process the user's message
+                response = conversation.predict(input=full_message)
+                
+                # Extract the assistant's response from the conversation
+                gpt_response = response
+                async_to_sync(bot.send_message)(chat_id=update.message.chat_id, text=gpt_response)
+                break  # If successful, break out of the loop
 
-        except Exception as e:
-            print("Error:", e)  # Debug print
-            async_to_sync(bot.send_message)(chat_id=update.message.chat_id, text="Sorry, I couldn't process that.")
+            except telegram.error.TimedOut:
+                if attempt < max_retries - 1:  # Don't sleep on the last attempt
+                    sleep(2)  # Wait for 2 seconds before retrying
+                else:
+                    print("Error: Max retries reached. Failed to send message to Telegram.")
+                    async_to_sync(bot.send_message)(chat_id=update.message.chat_id, text="Sorry, I couldn't process that.")
+            except Exception as e:
+                print("Error:", e)  # Debug print
+                async_to_sync(bot.send_message)(chat_id=update.message.chat_id, text="Sorry, I couldn't process that.")
+                break  # If it's not a timeout error, break out of the loop
 
     return JsonResponse({})
+
 
 
 
