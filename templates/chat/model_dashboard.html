@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Model Dashboard</h2>
+
+    <!-- Profile Update Section -->
+    <div class="mb-5">
+        <h4>Update Profile</h4>
+        <a href="{% url 'update_profile' %}" class="btn btn-info">Update Profile</a>
+    </div>
+
+    <!-- Fine Tune Avatar Configuration Section -->
+    <div class="mb-5">
+        <h4>Avatar Configuration</h4>
+        <a href="{% url 'update_digital_persona' %}" class="btn btn-warning">Fine Tune Avatar</a>
+    </div>
+
+    <!-- Conversations Section -->
+    <h4>Conversations</h4>
+    <div class="row">
+        {% for conversation in conversations %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Chat with {{ conversation.fan.username }}</h5>
+                    <p class="card-text">
+                        Last message: {{ conversation.last_message|truncatechars:40 }}
+                    </p>
+                    <a href="{% url 'view_conversation' conversation.id %}" class="btn btn-primary">View Conversation</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

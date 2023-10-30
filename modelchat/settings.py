@@ -1,6 +1,7 @@
 from pathlib import Path
 import dj_database_url
 import os
+from django.urls import reverse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -155,3 +156,19 @@ CHANNEL_LAYERS = {
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = 'smtp.mailgun.org'  # Mailgun's SMTP server
+#EMAIL_PORT = 587  # Use 465 for SSL
+#EMAIL_USE_TLS = True  # Use True for port 587, False for port 465
+#EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN')
+#EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD')
+ # Your Mailgun SMTP password
+
+
+def after_login_redirect(request):
+    if request.user.user_type == 'MODEL':
+        return reverse('model_dashboard')
+    else:
+        return reverse('fan_dashboard')
+    
+LOGIN_REDIRECT_URL = 'after_login_redirect'

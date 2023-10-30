@@ -12,6 +12,14 @@ class CustomUser(AbstractUser):
     # Override the groups and user_permissions fields to fix reverse accessor clashes
     groups = models.ManyToManyField(Group, blank=True, related_name="customuser_set")
     user_permissions = models.ManyToManyField(Permission, blank=True, related_name="customuser_set")
+    age = models.PositiveIntegerField(null=True, blank=True)
+    bio = models.TextField(null=True, blank=True)
+    location = models.CharField(max_length=100, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        super(CustomUser, self).save(*args, **kwargs)
+        if self.user_type == 'MODEL' and not hasattr(self, 'digital_persona'):
+            DigitalPersona.objects.create(user=self)
 
 # Model for storing chat messages
 class ChatMessage(models.Model):

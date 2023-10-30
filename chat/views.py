@@ -1,7 +1,10 @@
 import os
 import json
 import openai
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from langchain.chat_models import ChatOpenAI
@@ -18,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import async_to_sync
 from telegram.request._baserequest import BaseRequest
 
+from .forms import UpdateProfileForm, UpdateDigitalPersonaForm
 
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv()) # read local .env file
@@ -116,7 +120,48 @@ def telegram_webhook(request):
 
     return JsonResponse({})
 
+def after_login_redirect(request):
+    if request.user.user_type == 'MODEL':
+        return HttpResponseRedirect(reverse('model_dashboard'))
+    else:
+        return HttpResponseRedirect(reverse('fan_dashboard'))
+
+@login_required
+def model_dashboard(request):
+    if request.user.user_type != 'MODEL':
+        return redirect('fan_dashboard')  # Redirect to fan dashboard if not a model
+    return render(request, 'chat/model_dashboard.html')
+
+@login_required
+def fan_dashboard(request):
+    if request.user.user_type != 'FAN':
+        return redirect('model_dashboard')  # Redirect to model dashboard if not a fan
+    return render(request, 'chat/fan_dashboard.html')
 
 
+def update_profile(request):
+    if request.method == 'POST':
+        form = UpdateProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('home'))
+    else:
+        form = UpdateProfileForm(instance=request.user)
+    return render(request, 'chat/update_profile.html', {'form': form})
 
 
+def update_digital_persona(request):
+    if request.method == 'POST':
+        form = UpdateDigitalPersonaForm(request.POST, instance=request.user.digital_persona)
+        if form.is_valid():
+            digital_persona = form.save(commit=False)
+            digital_persona.ai_response_tuning = {
+                'response_speed': form.cleaned_data['response_speed'],
+                'response_length': form.cleaned_data['response_length'],
+                'response_style': form.cleaned_data['response_style'],
+            }
+            digital_persona.save()
+            return redirect(reverse('home'))  # Redirect to the home view
+    else:
+        form = UpdateDigitalPersonaForm(instance=request.user.digital_persona)
+    return render(request, 'chat/update_digital_persona.html', {'form': form})
