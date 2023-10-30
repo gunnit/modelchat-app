@@ -35,9 +35,6 @@ def set_telegram_webhook():
     async_to_sync(bot.set_webhook)(url=WEBHOOK_URL)
 
 
-
-
-
 llm_model ="gpt-3.5-turbo"
 llm = ChatOpenAI(temperature=0.0, model=llm_model)
 memory = ConversationBufferMemory()
