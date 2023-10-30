@@ -9,6 +9,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 
+import telegram
 from telegram import Bot, Update
 from telegram.ext import Updater
 from time import sleep
