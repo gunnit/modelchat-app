@@ -6,58 +6,58 @@ Home Page
 {% endblock %}
 
 {% block content %}
-<h1>ModelChat Home</h1>
-<p>This is the home page content.</p>
+<div class="text-center my-4">
+    <h1>Welcome to ModelChat!</h1>
+    <p>Engage in real-time conversations with AI-driven models.</p>
+</div>
 
+<div class="card">
+    <div class="card-header">
+        Chat Window
+    </div>
+    <div class="card-body" id="chat-box" style="height: 300px; overflow-y: scroll;"></div>
+    <div class="card-footer">
+        <div class="input-group">
+            <textarea id="message-input" rows="3" class="form-control" placeholder="Type your message..."></textarea>
+            <button id="send-button" class="btn btn-primary">Send</button>
+        </div>
+    </div>
+</div>
 
-    
-    <h1>Welcome to ModelChaAt!</h1>
+<input type="hidden" id="csrf-token" value="{% csrf_token %}">
+{% endblock %}
 
+{% block scripts %}
+<script>
+    document.getElementById('send-button').addEventListener('click', function() {
+        // Get the CSRF token from the hidden input field
+        var csrfToken = document.getElementById('csrf-token').value;
+        var messageInput = document.getElementById('message-input');
+        var userMessage = messageInput.value;
 
+        // Send the user message to your Django server for processing with GPT
+        console.log("Sending data:", { message: userMessage });  // Debug print
+        fetch('/api/process_message/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken, // Include the CSRF token in the headers
+            },
+            body: JSON.stringify({ message: userMessage }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Append the received message to the chat box
+            var chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += '<div class="mb-2"><strong>User:</strong> ' + userMessage + '</div>';
+            chatBox.innerHTML += '<div class="mb-2 text-primary"><strong>GPT-3:</strong> ' + data.message + '</div>';
 
-    <div id="chat-box" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px;"></div>
-    <textarea id="message-input" rows="3" placeholder="Type your message..."></textarea>
-    <button id="send-button">Send</button>
-
-    <p>This is the homepage.</p>
-    <input type="hidden" id="csrf-token" value="{% csrf_token %}">
-    {% endblock %}
-
-
-    {% block scripts %}
-
-    <script>
-        document.getElementById('send-button').addEventListener('click', function() {
-            // Get the CSRF token from the hidden input field
-            var csrfToken = document.getElementById('csrf-token').value;
-            var messageInput = document.getElementById('message-input');
-            var userMessage = messageInput.value;
-    
-            // Send the user message to your Django server for processing with GPT
-            console.log("Sending data:", { message: userMessage });  // Debug print
-            fetch('/api/process_message/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken, // Include the CSRF token in the headers
-                },
-                body: JSON.stringify({ message: userMessage }),
-            })
-            
-                .then(response => response.json())
-                .then(data => {
-                    // Append the received message to the chat box
-                    var chatBox = document.getElementById('chat-box');
-                    chatBox.innerHTML += '<p>User: ' + userMessage + '</p>';
-                    chatBox.innerHTML += '<p>GPT-3: ' + data.message + '</p>';
-    
-                    // Clear the message input field
-                    messageInput.value = '';
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+            // Clear the message input field
+            messageInput.value = '';
+        })
+        .catch(error => {
+            console.error('Error:', error);
         });
-    </script>
-
+    });
+</script>
 {% endblock %}
