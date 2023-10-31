@@ -118,7 +118,7 @@ def telegram_webhook(request):
         
         # Prepend the system message to set the context
        
-        full_message = system_message + " " + user_message_content
+        full_message = system_message + " " + message_text
         
         print("Received message from Telegram:", message_text)
         
