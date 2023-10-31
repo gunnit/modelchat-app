@@ -23,8 +23,13 @@ class CustomUser(AbstractUser):
 
 # Model for storing chat messages
 class ChatMessage(models.Model):
+    MESSAGE_TYPE_CHOICES = (
+        ('USER', 'User'),
+        ('AI', 'AI'),
+    )    
     sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='received_messages')
+    message_type = models.CharField(max_length=4, choices=MESSAGE_TYPE_CHOICES, default='USER')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_translated = models.BooleanField(default=False)  # To track if a message was translated

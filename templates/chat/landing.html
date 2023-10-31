@@ -1,0 +1,19 @@
+<!-- templates/landing.html -->
+
+{% extends "base.html" %}
+
+{% block title %}
+Welcome to ModelChat
+{% endblock %}
+
+{% block content %}
+<div class="text-center my-4">
+    <h1>Welcome to ModelChat!</h1>
+    <p>Engage in real-time conversations with AI-driven models.</p>
+    
+    <div class="mt-4">
+        <a href="{% url 'account_login' %}" class="btn btn-primary">Login</a>
+        <a href="{% url 'account_signup' %}" class="btn btn-secondary">Sign Up</a>
+    </div>
+</div>
+{% endblock %}

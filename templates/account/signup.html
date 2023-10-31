@@ -1,5 +1,32 @@
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sign Up</button>
-</form>
+{% extends "base.html" %}
+
+{% block title %}
+Sign Up
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card ">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Sign Up for ModelChat</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Create a new account to access all features.</p>
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-light">Sign Up</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted bg-transparent border-top-0">
+                    <small>Already have an account? <a href="{% url 'account_login' %}" class="">Login</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

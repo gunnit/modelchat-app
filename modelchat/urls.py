@@ -4,7 +4,8 @@ from chat import views
 
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('', views.landing_page, name='landing_page'),
+    path('home/', views.home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('api/process_message/', views.process_message, name='process_message'),
@@ -14,4 +15,5 @@ urlpatterns = [
     path('after_login_redirect/', views.after_login_redirect, name='after_login_redirect'),
     path('update_profile/', views.update_profile, name='update_profile'),
     path('update_digital_persona/', views.update_digital_persona, name='update_digital_persona'),
+    path('how_it_works/', views.how_it_works, name='how_it_works'),
 ]

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}
+How It Works
+{% endblock %}
+
+{% block content %}
+<div class="text-center my-4">
+    <h1>How ModelChat Works</h1>
+    <p>Welcome to ModelChat! Here's a brief overview of how our platform operates:</p>
+</div>
+
+<!-- How It Works for Models -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        For Models
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">Step 1: Sign Up</h5>
+        <p class="card-text">Register an account with us and choose the "Model" option. Set up your profile to showcase yourself to fans.</p>
+
+        <h5 class="card-title">Step 2: Engage in Conversations</h5>
+        <p class="card-text">Start real-time AI-driven conversations with fans. Interact with multiple fans simultaneously.</p>
+
+        <h5 class="card-title">Step 3: Customize Your Experience</h5>
+        <p class="card-text">Fine-tune your digital persona to set a specific style or tone for your AI-driven interactions.</p>
+    </div>
+</div>
+
+<!-- How It Works for Fans -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        For Fans
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">Step 1: Sign Up</h5>
+        <p class="card-text">Register an account with us and choose the "Fan" option. Access the platform and start chatting with models.</p>
+
+        <h5 class="card-title">Step 2: Engage in Conversations</h5>
+        <p class="card-text">Engage in real-time conversations with your favorite models, powered by AI.</p>
+
+        <h5 class="card-title">Step 3: Customize Your Experience</h5>
+        <p class="card-text">Provide feedback on your chat experiences and customize chat settings to your preference.</p>
+    </div>
+</div>
+
+<div class="text-center my-4">
+    <a href="{% url 'account_signup' %}" class="btn btn-primary">Get Started</a>
+</div>
+{% endblock %}

@@ -40,28 +40,38 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    </li>
+                    {% if user.user_type == "FAN" %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'fan_dashboard' %}">Profile</a>
+                        </li>
+                    {% elif user.user_type == "MODEL" %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'update_profile' %}">Update</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'update_digital_persona' %}">Persona</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'account_logout' %}">LogOut</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'account_login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'account_signup' %}">Sign Up</a>
+                    </li>
+                {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'fan_dashboard' %}"> Profile</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'update_profile' %}"> Update</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'update_digital_persona' %}"> Persona</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'account_logout' %}"> LogOut</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'account_login' %}">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'account_signup' %}">Sign Up</a>
+                    <a class="nav-link" href="{% url 'how_it_works' %}">How It Works</a>
                 </li>
             </ul>
+            
         </div>
     </div>
 </nav>

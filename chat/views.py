@@ -7,10 +7,13 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.db.models import Q
+
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
+
 
 import telegram
 from telegram import Bot, Update
@@ -22,6 +25,7 @@ from asgiref.sync import async_to_sync
 from telegram.request._baserequest import BaseRequest
 
 from .forms import UpdateProfileForm, UpdateDigitalPersonaForm
+from .models import ChatMessage, CustomUser
 
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv()) # read local .env file
@@ -42,16 +46,19 @@ def set_telegram_webhook():
 llm_model ="gpt-3.5-turbo"
 llm = ChatOpenAI(temperature=0.0, model=llm_model)
 memory = ConversationBufferMemory()
+
+persona = "You are Sara, an adult movie star with an upbeat personality. Engage in friendly conversations and avoid inappropriate topics with funny comments, questions, or made up stories that engage with the user."
+system_message = f"System: {persona}"
+# Initialize langchain with the enhanced system message
 conversation = ConversationChain(llm=llm, memory=memory, verbose=True)
-system_message = "You are Sara, an AI assistant who works in the fashion industry."
 
 
 # Create your views here.
 
-def home(request): 
-
-
-    return render(request, 'chat/home.html')
+def home(request):
+    # Get the last 20 messages involving the logged-in user (both sent and received)
+    messages = ChatMessage.objects.filter(Q(sender=request.user) | Q(receiver=request.user)).order_by('timestamp')[:20]
+    return render(request, 'chat/home.html', {'messages': messages})
 
 # Decorate the view to exempt it from CSRF protection
 @csrf_exempt
@@ -59,29 +66,46 @@ def process_message(request):
     if request.method == 'POST':
         # Parse the JSON data from the request body
         data = json.loads(request.body.decode('utf-8'))
-        user_message = data.get('message')
-        print(user_message)
+        user_message_content = data.get('message')
 
-        # Prepend the system message to set the context
-        full_message = system_message + " " + user_message
+        # Assuming the logged-in user is the sender
+        sender_user = request.user
 
+        # Create a dummy AI user if it doesn't exist
+        ai_user, created = CustomUser.objects.get_or_create(username='AI_Bot')
+
+        # Save the user's message to the database
+        user_message = ChatMessage(
+            sender=sender_user,
+            receiver=ai_user,  # Set AI as the receiver
+            content=user_message_content,
+            # message_type='USER'  # Uncomment if you add this field to the model
+        )
+        user_message.save()
+
+       
         try:
             # Use the conversation chain to process the user's message
-            response = conversation.predict(input=full_message)
+            # Prepend the system message to set the context
+            full_message = system_message + " " + user_message_content
+            ai_response_content = conversation.predict(input=full_message)
             
-            # Extract the assistant's response from the conversation
-            print(type(response), response)
-            gpt_response = response
-            print(gpt_response)
+            # Save the AI's response to the database
+            ai_response = ChatMessage(
+                sender=ai_user,
+                receiver=sender_user,
+                content=ai_response_content,
+                # message_type='AI'  # Uncomment if you add this field to the model
+            )
+            ai_response.save()
 
-            return JsonResponse({'message': gpt_response})
+            return JsonResponse({'message': ai_response_content})
 
         except Exception as e:
             print("Error:", e)  # Debug print
             return JsonResponse({'message': 'An error occurred: ' + str(e)})
 
     return JsonResponse({'message': 'Invalid request'})
-
 
 
 
@@ -93,13 +117,15 @@ def telegram_webhook(request):
         message_text = update.message.text
         
         # Prepend the system message to set the context
-        full_message = system_message + " " + message_text
+       
+        full_message = system_message + " " + user_message_content
+        
         print("Received message from Telegram:", message_text)
         
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # Use the conversation chain to process the user's message
+                # Use the conversation chain to process the user's message                
                 response = conversation.predict(input=full_message)
                 
                 # Extract the assistant's response from the conversation
@@ -165,3 +191,11 @@ def update_digital_persona(request):
     else:
         form = UpdateDigitalPersonaForm(instance=request.user.digital_persona)
     return render(request, 'chat/update_digital_persona.html', {'form': form})
+
+def landing_page(request):
+    if request.user.is_authenticated:
+        return redirect('home')  # Redirect to home if user is already authenticated
+    return render(request, 'chat/landing.html')
+
+def how_it_works(request):
+    return render(request, 'chat/how_it_works.html')
