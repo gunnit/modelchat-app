@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}
+Select a Model
+{% endblock %}
+
+{% block content %}
+<div class="text-center my-4">
+    <h1>Select a Model to Chat With</h1>
+</div>
+
+<div class="row">
+    {% for model in models %}
+    <div class="col-md-4">
+        <div class="card mb-4">
+            {% if model.profile_image %}
+            <img src="{{ model.profile_image.url }}" class="card-img-top" alt="{{ model.username }}">
+            {% else %}
+            <img src="/static/default_profile.jpg" class="card-img-top" alt="Default Profile">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ model.username }}</h5>
+                <p class="card-text">{{ model.bio|default:"No bio available." }}</p>
+                <a href="{% url 'chat_with_model' model.id %}" class="btn btn-primary">Chat Now</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

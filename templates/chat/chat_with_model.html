@@ -1,0 +1,76 @@
+<!-- templates/chat_with_model.html -->
+{% extends "base.html" %}
+
+{% block title %}
+Chat with {{ model_user.username }}
+{% endblock %}
+
+{% block content %}
+<div class="text-center my-4">
+    <h1> Chatting with {{ model_user.username }}</h1>
+    <p>Engage in real-time conversations with {{ model_user.username }}. {{ model_user.bio }}</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Chatting with {{ model_user.username }} - 
+        <img src="" alt="{{ model_user.username }}" width="50" height="50">
+        <!-- Display other model details if needed -->
+        
+        {% if user.user_type == "MODEL" %}
+            <p>You are logged in as a Model.</p>
+        {% elif user.user_type == "FAN" %}
+            <p>You are logged in as a Fan.</p>
+        {% else %}
+            <p>Welcome to the platform!</p>
+        {% endif %}
+    </div>
+    <div class="card-body" id="chat-box" style="height: 300px; overflow-y: scroll;">
+        {% for message in messages %}
+        {% if message.sender == request.user %}
+            <div class="mb-2"><strong>You:</strong> {{ message.content }}</div>
+        {% else %}
+            <div class="mb-2 text-primary"><strong>{{ model_user.username }}:</strong> {{ message.content }}</div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <div class="card-footer">
+        <div class="input-group">
+            <textarea id="message-input" rows="3" class="form-control" placeholder="Type your message..."></textarea>
+            <button id="send-button" class="btn btn-primary">Send</button>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="csrf-token" value="{% csrf_token %}">
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('send-button').addEventListener('click', function() {
+        var csrfToken = document.getElementById('csrf-token').value;
+        var messageInput = document.getElementById('message-input');
+        var userMessage = messageInput.value;
+
+        console.log("Sending data:", { message: userMessage });
+        fetch('/api/process_message/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ message: userMessage }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            var chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += '<div class="mb-2"><strong>User:</strong> ' + userMessage + '</div>';
+            chatBox.innerHTML += '<div class="mb-2 text-primary"><strong>{{ model_user.username }}:</strong> ' + data.message + '</div>';
+            messageInput.value = '';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}

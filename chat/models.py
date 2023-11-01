@@ -21,6 +21,15 @@ class CustomUser(AbstractUser):
         if self.user_type == 'MODEL' and not hasattr(self, 'digital_persona'):
             DigitalPersona.objects.create(user=self)
 
+
+class Conversation(models.Model):
+    fan = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='fan_conversations', limit_choices_to={'user_type': 'FAN'})
+    model = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='model_conversations', limit_choices_to={'user_type': 'MODEL'})
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['fan', 'model']
+
 # Model for storing chat messages
 class ChatMessage(models.Model):
     MESSAGE_TYPE_CHOICES = (
@@ -34,6 +43,8 @@ class ChatMessage(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     is_translated = models.BooleanField(default=False)  # To track if a message was translated
     original_language = models.CharField(max_length=10, blank=True, null=True)  # Store original language code
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages', null=True)
+
 
 # Model for the AI-driven persona settings for models
 class DigitalPersona(models.Model):

@@ -7,7 +7,7 @@
         {% for model_user in model_users %}
         <div class="col-md-4">
             <div class="card mb-4">
-                <img src="{{ model_user.profile_image.url }}" alt="{{ model_user.username }}" class="card-img-top">
+                <img src="" alt="{{ model_user.username }}" class="card-img-top">
                 <div class="card-body">
                     <h5 class="card-title">{{ model_user.username }}</h5>
                     <p class="card-text">
@@ -15,7 +15,8 @@
                         <!-- Add other model details here -->
                         Details: {{ model_user.details }}
                     </p>
-                    <a href="{% url 'chat_with_model' model_user.id %}" class="btn btn-primary">Chat with {{ model_user.username }}</a>
+                    <a href="{% url 'chat_with_model' model_user.username %}">Chat with {{ model_user.username }}</a>
+
                 </div>
             </div>
         </div>

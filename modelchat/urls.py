@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path, include
 from chat import views
 
@@ -16,4 +18,11 @@ urlpatterns = [
     path('update_profile/', views.update_profile, name='update_profile'),
     path('update_digital_persona/', views.update_digital_persona, name='update_digital_persona'),
     path('how_it_works/', views.how_it_works, name='how_it_works'),
+    # in urls.py
+    path('chat_with_model/<str:model_username>/', views.chat_with_model, name='chat_with_model'),
+
+
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

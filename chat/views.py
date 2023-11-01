@@ -25,7 +25,7 @@ from asgiref.sync import async_to_sync
 from telegram.request._baserequest import BaseRequest
 
 from .forms import UpdateProfileForm, UpdateDigitalPersonaForm
-from .models import ChatMessage, CustomUser
+from .models import ChatMessage, CustomUser, Conversation
 
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv()) # read local .env file
@@ -47,10 +47,19 @@ llm_model ="gpt-3.5-turbo"
 llm = ChatOpenAI(temperature=0.0, model=llm_model)
 memory = ConversationBufferMemory()
 
-persona = "You are Sara, an adult movie star with an upbeat personality. Engage in friendly conversations and avoid inappropriate topics with funny comments, questions, or made up stories that engage with the user."
+persona = "You are Sara, a friendly and upbeat personality known for her roles in adult films. Engage in light-hearted and respectful conversations. Avoid discussing explicit details and handle inappropriate requests gracefully."
 system_message = f"System: {persona}"
-# Initialize langchain with the enhanced system message
+system_message = "You are chatting with Sara, a popular adult movie star. She's here to engage in friendly conversations. How can she assist you today?"
+
 conversation = ConversationChain(llm=llm, memory=memory, verbose=True)
+
+def generate_prompt(user_message, previous_responses=None):
+    base_prompt = f"System: {persona}"
+    if previous_responses:
+        conversation_history = "\n".join(previous_responses)
+        return f"{base_prompt}\n{conversation_history}\nUser: {user_message}\nSara: "
+    else:
+        return f"{base_prompt}\nUser: {user_message}\nSara: "
 
 
 # Create your views here.
@@ -64,45 +73,40 @@ def home(request):
 @csrf_exempt
 def process_message(request):
     if request.method == 'POST':
-        # Parse the JSON data from the request body
         data = json.loads(request.body.decode('utf-8'))
         user_message_content = data.get('message')
-
-        # Assuming the logged-in user is the sender
         sender_user = request.user
-
-        # Create a dummy AI user if it doesn't exist
         ai_user, created = CustomUser.objects.get_or_create(username='AI_Bot')
 
-        # Save the user's message to the database
         user_message = ChatMessage(
             sender=sender_user,
-            receiver=ai_user,  # Set AI as the receiver
+            receiver=ai_user,
             content=user_message_content,
-            # message_type='USER'  # Uncomment if you add this field to the model
         )
         user_message.save()
 
-       
+        # Get previous messages for context (assuming a maximum of 5 for this example)
+        previous_messages = ChatMessage.objects.filter(Q(sender=request.user) | Q(receiver=request.user)).order_by('-timestamp')[:5]
+        previous_responses = [f"User: {msg.content}" if msg.sender == request.user else f"Sara: {msg.content}" for msg in previous_messages]
+
+        prompt = generate_prompt(user_message_content, previous_responses)
+
         try:
-            # Use the conversation chain to process the user's message
-            # Prepend the system message to set the context
-            full_message = system_message + " " + user_message_content
-            ai_response_content = conversation.predict(input=full_message)
+            ai_response_content = conversation.predict(input=prompt)
+            sara_emoji = "💋"
+            response = f"{sara_emoji} {ai_response_content}"
             
-            # Save the AI's response to the database
             ai_response = ChatMessage(
                 sender=ai_user,
                 receiver=sender_user,
                 content=ai_response_content,
-                # message_type='AI'  # Uncomment if you add this field to the model
             )
             ai_response.save()
 
-            return JsonResponse({'message': ai_response_content})
+            return JsonResponse({'message': response})
 
         except Exception as e:
-            print("Error:", e)  # Debug print
+            print("Error:", e)
             return JsonResponse({'message': 'An error occurred: ' + str(e)})
 
     return JsonResponse({'message': 'Invalid request'})
@@ -160,9 +164,13 @@ def model_dashboard(request):
 
 @login_required
 def fan_dashboard(request):
+
+    model_user = CustomUser.objects.filter(user_type='MODEL')
+    print(model_user.count())
+
     if request.user.user_type != 'FAN':
         return redirect('model_dashboard')  # Redirect to model dashboard if not a fan
-    return render(request, 'chat/fan_dashboard.html')
+    return render(request, 'chat/fan_dashboard.html', {'model_users': model_user})
 
 
 def update_profile(request):
@@ -199,3 +207,21 @@ def landing_page(request):
 
 def how_it_works(request):
     return render(request, 'chat/how_it_works.html')
+
+@login_required
+def chat_with_model(request, model_username):
+    model_user = CustomUser.objects.get(username=model_username, user_type='MODEL')
+    fan = request.user
+
+    # Get or create the conversation between the fan and the model
+    conversation, created = Conversation.objects.get_or_create(fan=fan, model=model_user)
+
+    # Get the last 20 messages for this conversation
+    messages = ChatMessage.objects.filter(conversation=conversation).order_by('timestamp')[:20]
+
+    context = {
+        'model_user': model_user,
+        'messages': messages,
+    }
+    return render(request, 'chat/chat_with_model.html', context)
+#473467
